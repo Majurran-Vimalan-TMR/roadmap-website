@@ -19,7 +19,7 @@ style="background-color: rgb(47, 44, 43);
        color: #ffffff;">
 <div id="navbar">
    <div class="navbar-brand" >
-      <img src="{{ url_for('static', filename='img/ABSLogo.png') }}" alt="ABS Logo"
+      <img src="{{ url_for('static', filename='img/ABSLogo.png') }}" alt="ROAR Consolidation Dashboard"
            >
   </div>
 <div class="navbar-nav" style="width: 98vw;justify-content:space-between;">
@@ -47,8 +47,8 @@ style="background-color: rgb(47, 44, 43);
                         </div>
                         <div class="col-7 col-md-8">
                            <div class="numbers">
-                              <p class="card-category">Number of Residents on Website</p>
-                              <p class="card-title">{{num_residents}}</p>
+                              <p class="card-category">Number of Assets in ROAR Database</p>
+                              <p class="card-title">{{num_roar_assets}}</p>
                               <p></p>
                            </div>
                         </div>
@@ -73,8 +73,62 @@ style="background-color: rgb(47, 44, 43);
                         </div>
                         <div class="col-7 col-md-8">
                            <div class="numbers">
-                              <p class="card-category">Number of Nursing homes Registered</p>
-                              <p class="card-title">{{num_nursing_home}}</p>
+                              <p class="card-category">Number of Assets in AMMS</p>
+                              <p class="card-title">{{num_amms_assets}}</p>
+                              <p></p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="card-footer ">
+                     <hr>
+                     <div class="stats" style="color: #66615b;">
+                        <i class="fa fa-calendar" style="color: #66615b;"></i> Last Updated: {{reload_time}}
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+		 <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-6">
+               <div class="card card-stats">
+                  <div class="card-body ">
+                     <div class="row">
+                        <div class="col-5 col-md-4">
+                           <div class="icon-big text-center icon-warning">
+                              <i class="nc-icon nc-globe text-warning"></i>
+                           </div>
+                        </div>
+                        <div class="col-7 col-md-8">
+                           <div class="numbers">
+                              <p class="card-category">Number of Sites in ROAR Database</p>
+                              <p class="card-title">{{num_roar_sites}}</p>
+                              <p></p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="card-footer ">
+                     <hr>
+                     <div class="stats" style="color: #66615b;">
+                        <i class="fa fa-calendar" style="color: #66615b;"></i> Last Updated: {{reload_time}}
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-6">
+               <div class="card card-stats">
+                  <div class="card-body ">
+                     <div class="row">
+                        <div class="col-5 col-md-4">
+                           <div class="icon-big text-center icon-warning">
+                              <i class="nc-icon nc-money-coins text-success"></i>
+                           </div>
+                        </div>
+                        <div class="col-7 col-md-8">
+                           <div class="numbers">
+                              <p class="card-category">Number of Sites in AMMS</p>
+                              <p class="card-title">{{num_amms_sites}}</p>
                               <p></p>
                            </div>
                         </div>
@@ -93,11 +147,12 @@ style="background-color: rgb(47, 44, 43);
             <div class="col-md-8">
                <div class="card">
                   <div class="card-header ">
-                     <h5 class="card-title">Mood statistics</h5>
-                     <p class="card-category">Mood visualisation</p>
+                     <h5 class="card-title">ROAR Discrepancies</h5>
+                     <p class="card-category">Assets and Sites in ROAR, not present in AMMS</p>
                   </div>
                   <div class="card-body">
-                     <span id="Mood-Graph" class="Mood-Graph" style="display: flex;"> <span id="Detailed-Mood-Graph" class="Detailed-Mood-Graph"></span></span>
+                     <div id="roar-chart" class="roar-chart" style="display: flex;"> </div>
+					 <div id="amms-chart" class="amms-chart"></div>					 
                   </div>
                   <div class="card-footer ">
 
@@ -111,8 +166,8 @@ style="background-color: rgb(47, 44, 43);
             <div class="col-md-4">
                <div class="card card-chart" style="height: 600px;">
                   <div class="card-header">
-                     <h5 class="card-title">Activities Responses</h5>
-                     <p class="card-category">bar chart representation</p>
+                     <h5 class="card-title">AMMS Discrepancies</h5>
+                     <p class="card-category">Assets and Sites in AMMS, not present in ROAR</p>
                   </div>
                   <div class="card-body">
                      <div style="position: absolute; inset: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;" class="chartjs-size-monitor">
@@ -294,26 +349,12 @@ style="background-color: rgb(47, 44, 43);
    var graphs = {{ graph_activities | safe }};
    Plotly.plot('Activities-Graph', graphs, {});
    
-   var mood = {{ mood_ratio | safe }};
-   Plotly.plot('Mood-Graph', mood, {});
+   var roar_chart_plotly = {{ roar_chart | safe }};
+   Plotly.plot('roar-chart', roar_chart_plotly, {});
    
-   var detailed_mood = {{ detailed_mood_ratio | safe }};
-   Plotly.plot('Detailed-Mood-Graph', detailed_mood, {});
+   var amms_chart_plotly = {{ amms_chart | safe }};
+   Plotly.plot('amms-chart', amms_chart_plotly, {});
 
-   var state_pie = {{ state_pie_chart | safe }};
-   Plotly.plot('Population-Pie-Chart', state_pie, {});
-   
-   var line_one = {{ line_graph_one | safe }};
-   Plotly.plot('Line-Graph-One', line_one, {});
-   
-   var line_two = {{ line_graph_two | safe }};
-   Plotly.plot('Line-Graph-Two', line_two, {});
-   
-   var line_three = {{ line_graph_three | safe }};
-   Plotly.plot('Line-Graph-Three', line_three, {});
-   
-   var line_four = {{ line_graph_four | safe }};
-   Plotly.plot('Line-Graph-Four', line_four, {});
 
 </script>
 {% endblock %}
