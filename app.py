@@ -4,6 +4,7 @@ import plotly
 import plotly.express as px
 import plotly.graph_objs as go
 import pandas as pd
+import json
 from ast import literal_eval
 app = Flask(__name__)
 
@@ -11,8 +12,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    adf_path = "C:/Users/mzvimal/TMR/RoadMap - Documents/General/03 Project Working Folder/05 Reference Documentation/05 ITSE/20230729/ROAR to AMMS ADF/AMMS_BASE_ITSE_202307282235.ADF/AMMS ITSE ADF Proper Columns.csv"
-
+    adf_path = "ADF File.csv"
 
     def dataframe_length(file_path):
         try:
@@ -20,30 +20,6 @@ def hello_world():
         except Exception:
             dataframe_1 = pd.read_excel(file_path)
         return len(dataframe_1)
-
-    sites = True
-    if sites:
-        frontend_column = "SITE_ID"
-        database_column = "SITE_ID"
-        amms_column = "Code"
-
-        frontend_path = "C:/Users/mzvimal/TMR/RoadMap - Documents/General/03 Project Working Folder/05 Reference Documentation/05 ITSE/20230729/ROAR Front End/Sites/site_adf-2023-07-29T03_17_13.645Z.xlsx"
-        database_path = "C:/Users/mzvimal/TMR/RoadMap - Documents/General/03 Project Working Folder/05 Reference Documentation/05 ITSE/20230729/TSDM Database/AR_SITES_ALL.xlsx"
-        amms_path = "C:/Users/mzvimal/TMR/RoadMap - Documents/General/03 Project Working Folder/05 Reference Documentation/05 ITSE/20230729/AMMS DB/ElectricalSite.csv"
-        sites_database_len = dataframe_length(database_path)
-        sites_amms_len = dataframe_length(amms_path)
-        sites = not sites
-    if not sites:
-        frontend_column = "ASSET_ID"
-        database_column = "ASSET_ID"
-        amms_column = "Code"
-        frontend_path = "C:/Users/mzvimal/TMR/RoadMap - Documents/General/03 Project Working Folder/05 Reference Documentation/05 ITSE/20230729/ROAR Front End/Assets/Full ROAR Frontend Asset List.csv"
-        database_path = "C:/Users/mzvimal/TMR/RoadMap - Documents/General/03 Project Working Folder/05 Reference Documentation/05 ITSE/20230729/TSDM Database/AR_ASSETS_ALL.csv"
-        amms_path = "C:/Users/mzvimal/TMR/RoadMap - Documents/General/03 Project Working Folder/05 Reference Documentation/05 ITSE/20230729/AMMS DB/ElectricalAsset.csv"
-        amms_asset_path = "C:/Users/mzvimal/TMR/RoadMap - Documents/General/03 Project Working Folder/05 Reference Documentation/05 ITSE/20230729/AMMS DB/Assets.csv"
-        asset_database_len = dataframe_length(database_path)
-        asset_amms_len = dataframe_length(amms_path)
-    adf_column = "ID"
 
 
     def merge(file_path_1, file_path_2, dataframe_1_column,dataframe_2_column,detail_string,dataframe_1_filters=[],
@@ -141,35 +117,91 @@ def hello_world():
                 print( "Up to",index,"/",len(dataframe_1_list))
 
         return dataframe_1_exclusive_asset_count
+    
+    sites = True
+    if sites:
+        frontend_column = "SITE_ID"
+        database_column = "SITE_ID"
+        amms_column = "Code"
 
-
-    assets_in_roar_not_in_amms = consolidate(database_path, amms_path,database_column,amms_column,"Assets in ROAR Database not in AMMS",
+        frontend_path = "ROAR Frontend Sites.csv"
+        database_path = "AR_SITES_ALL.xlsx"
+        amms_path = "ElectricalSite.csv"
+        sites_database_len = dataframe_length(database_path)
+        sites_amms_len = dataframe_length(amms_path)
+        sites = not sites
+        sites_in_roar_not_in_amms = consolidate(database_path, amms_path,database_column,amms_column,"Sites in ROAR Database not in AMMS",
                 dataframe_1_filters = [],
                 dataframe_2_filters = [])
 
-    assets_in_amms_not_in_roar = consolidate(amms_path,database_path, amms_column,database_column,"Assets in AMMS not in ROAR Database",
-                dataframe_1_filters = [],
-                dataframe_2_filters = [])
+        sites_in_amms_not_in_roar = consolidate(amms_path,database_path, amms_column,database_column,"Sites in AMMS not in ROAR Database",
+                    dataframe_1_filters = [],
+                    dataframe_2_filters = [])
+    # Assets
+    if not sites:
+        frontend_column = "ASSET_ID"
+        database_column = "ASSET_ID"
+        amms_column = "Code"
+        frontend_path = "Full ROAR Frontend Asset List.csv"
+        database_path = "AR_ASSETS_ALL.csv"
+        amms_path = "ElectricalAsset.csv"
+        asset_database_len = dataframe_length(database_path)
+        asset_amms_len = dataframe_length(amms_path)
+
+        assets_in_roar_not_in_amms = consolidate(database_path, amms_path,database_column,amms_column,"Assets in ROAR Database not in AMMS Database",
+                dataframe_1_filters = ['dataframe_1[dataframe_1["ORG_UNIT"]=="ITSE"]'],)
+        assets_in_amms_not_in_roar = consolidate(amms_path,database_path,amms_column,database_column,"Assets in in AMMS Database not in ROAR Database",
+                    dataframe_2_filters = ['dataframe_2[dataframe_2["ORG_UNIT"]=="ITSE"]'],)
+        
+    adf_column = "ID"
+
+
+
+
+
+    
     
 
     roar_labels = ['Both', 'ROAR Exclusive']
     
-    roar_chart = go.Figure(data = [go.Pie(labels = roar_labels, values = [asset_database_len-assets_in_roar_not_in_amms,assets_in_roar_not_in_amms])])
-    roar_chart.update_layout(
+    roar_sites_chart = go.Figure(data = [go.Pie(labels = roar_labels, values = [sites_database_len-sites_in_roar_not_in_amms,sites_in_roar_not_in_amms])])
+    roar_sites_chart.update_layout(
+                width=300,
+                height=424,
+                title = "Sites Present in Both Databases vs Sites exclusive to ROAR",
+    )
+    roar_sites_chart.update_traces(hoverinfo='label+percent', textinfo='value+percent')
+    
+    amms_labels = ['Both', 'AMMS Exclusive']
+    
+    amms_sites_chart = go.Figure(data = [go.Pie(labels = amms_labels, values = [sites_amms_len-sites_in_amms_not_in_roar,sites_in_amms_not_in_roar])])
+    amms_sites_chart.update_layout(
+                width=300,
+                height=424,
+                title = "Sites Present in Both Databases vs Sites exclusive to AMMS",
+    )
+    amms_sites_chart.update_traces(hoverinfo='label+percent', textinfo='value+percent')
+
+
+
+    
+    roar_asset_chart = go.Figure(data = [go.Pie(labels = roar_labels, values = [asset_database_len-assets_in_roar_not_in_amms,assets_in_roar_not_in_amms])])
+    roar_asset_chart.update_layout(
                 width=300,
                 height=424,
                 title = "Assets Present in Both Databases vs Assets exclusive to ROAR",
     )
-
-    amms_labels = ['Both', 'AMMS Exclusive']
+    roar_asset_chart.update_traces(hoverinfo='label+percent', textinfo='value+percent')
     
-    amms_chart = go.Figure(data = [go.Pie(labels = amms_labels, values = [asset_amms_len-assets_in_amms_not_in_roar,assets_in_amms_not_in_roar])])
-    amms_chart.update_layout(
+    
+    amms_asset_chart = go.Figure(data = [go.Pie(labels = amms_labels, values = [asset_amms_len-assets_in_amms_not_in_roar,assets_in_amms_not_in_roar])])
+    amms_asset_chart.update_layout(
                 width=300,
                 height=424,
                 title = "Assets Present in Both Databases vs Assets exclusive to AMMS",
     )
-        
+    amms_asset_chart.update_traces(hoverinfo='label+percent', textinfo='value+percent')
+
 ##    if sites:
 ##        pass
 ##    else:
@@ -204,12 +236,17 @@ def hello_world():
 ##        invalid_analysis["Model"] = merged_dataframe.apply(lambda row: analyze_row_direct(row,"Model","Model_x","Model_y"),axis=1)
 
     
-        
+    roar_asset_chart_encoded = json.dumps(roar_asset_chart, cls=plotly.utils.PlotlyJSONEncoder)    
+    amms_asset_chart_encoded = json.dumps(amms_asset_chart, cls=plotly.utils.PlotlyJSONEncoder)
+
+    roar_sites_chart_encoded = json.dumps(roar_sites_chart, cls=plotly.utils.PlotlyJSONEncoder)    
+    amms_sites_chart_encoded = json.dumps(amms_sites_chart, cls=plotly.utils.PlotlyJSONEncoder)
 
    
     
     print("Did we reach this point?")
     return render_template('public-dashboard.html',num_roar_assets = asset_database_len,
                            num_amms_assets = asset_amms_len, num_roar_sites = sites_database_len,
-                           num_amms_sites = sites_amms_len,roar_chart=roar_chart,amms_chart=amms_chart, graph_activities=amms_chart)
+                           num_amms_sites = sites_amms_len,roar_asset_chart=roar_asset_chart_encoded,amms_asset_chart=amms_asset_chart_encoded,
+                           roar_sites_chart = roar_sites_chart_encoded,amms_sites_chart=amms_sites_chart_encoded)
                            
